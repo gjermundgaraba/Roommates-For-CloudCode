@@ -150,9 +150,9 @@ Parse.Cloud.afterSave("Expense", function(request) {
  /* After save function for TaskList */
  Parse.Cloud.afterSave("TaskList", function(request) {
  	 Parse.Cloud.useMasterKey();
+ 	 
  	 var taskList = request.object;
-
- 	 var user = taskList.get("createdBy");
+ 	 var user = Parse.User.current();
  	 var household = taskList.get("household");
  	 var householdRoleName =  "household-" + household.id;
  	 var eventACL = new Parse.ACL;
@@ -172,8 +172,6 @@ Parse.Cloud.afterSave("Expense", function(request) {
  	 }
  	 
  	 if (taskList.get("done")) {
- 	 	// Get some Variables
-		
 		// Set up Event
 		var Event = Parse.Object.extend("Event");
 		var event = new Event();
@@ -311,7 +309,6 @@ Parse.Cloud.define("inviteUserToHousehold", function(request, response) {
 								invitation.save(null, {
 									success: function(invitation) {
 										// Invitation was sent, time to send a push notification to the invitee
-										//var userChannel = "user-" + invitee.id;
 										
 										var queryForInstallations = new Parse.Query(Parse.Installation);
 										queryForInstallations.equalTo("user", invitee);
@@ -426,11 +423,7 @@ Parse.Cloud.define("leaveHousehold", function(request, response) {
 			householdRole.getUsers().remove(currentUser);
 			householdRole.save(null, {
 				success: function(householdRole) {
-					// Remove the active household from the user
 					currentUser.unset("activeHousehold");
-					
-					// If we were to support several households, we should probably set another household as active right about now.
-					// But since we currently do _not_ support this we just save and call it a day.
 					currentUser.save(null, {
 						success: function(currentUser) {
 							// User is now ok, time to let the other members of the household know that the user left.
