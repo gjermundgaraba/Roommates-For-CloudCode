@@ -5,6 +5,51 @@
  *
  */
  
+/* Function for restting a users password
+ *
+ * Calls the Parse reset functions, but checks that the user is not a facebook-linked user.
+ *
+ * Input:
+ * "username" : usernameStr, 
+ * 
+ * Output:
+ * String
+ *
+ */
+Parse.Cloud.define("resetPassword", function(request, response) {
+	Parse.Cloud.useMasterKey();
+	
+	var email = request.params.username;
+	
+	var queryForUserToResetPassword = new Parse.Query(Parse.User);
+	queryForUserToResetPassword.equalTo("email", email);
+	
+	queryForUserToResetPassword.first({
+		success: function(user) {
+			if (typeof user === "undefined") {
+				response.error("Could not find user");
+			} else {
+				if (Parse.FacebookUtils.isLinked(user)) {
+					response.error("This user is linked against Facebook. Log in with Facebook.");
+				} else {
+					Parse.User.requestPasswordReset(email, {
+						success: function() {
+							response.success("An email has been sent with instructions to reset your password");
+						},
+						error: function(error) {
+							response.error("Error: " + error.code + " " + error.message);
+						}
+					});
+				}
+			}
+		},
+		error: function(error) {
+			response.error("Could not get user. Try again.");
+		}
+	});
+});
+
+ 
 /* Before Delete for TaskList.
  * This hook is called every time someone tries to delete a task list
  * It makes sure that all task list elements and events that points to
