@@ -314,6 +314,10 @@ Parse.Cloud.define("inviteUserToHousehold", function(request, response) {
 	var householdId = request.params.householdId;
 	var currentUser = Parse.User.current();
 	
+	if (currentUser.getUsername() == username) {
+		response.error("You cannot invite yourself");
+	}
+	
 	// Query for the invitee
 	var queryForInvitee = new Parse.Query(Parse.User);
 	queryForInvitee.equalTo("username", username);
